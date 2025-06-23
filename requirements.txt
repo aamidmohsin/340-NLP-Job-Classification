@@ -1,0 +1,22 @@
+# Core scientific libraries
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+
+# NLP libraries
+nltk
+spacy
+textblob
+
+# Jupyter notebook support
+notebook
+jupyter
+
+# For reading/writing various file formats
+openpyxl
+
+# Optional: For deep learning (comment out if not used)
+# torch
+# tensorflow 
