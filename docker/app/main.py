@@ -106,52 +106,52 @@ def health_check():
     return {"status": "ok", "message": "Job Fraud Classifier API is running."}
 
 
-# local testing
-if __name__ == '__main__':
-    print("\n--- Running Local Test ---")
-    print(f"Testing {len(MODEL_CONFIG)} models\n")
+# # local testing
+# if __name__ == '__main__':
+#     print("\n--- Running Local Test ---")
+#     print(f"Testing {len(MODEL_CONFIG)} models\n")
     
-    # Test data
-    test_data_real = PredictionRequest(
-        job_description="We are seeking an experienced data scientist for a salaried position at our corporate headquarters in Chicago.",
-        model_label="nb_bow"  # Will be overridden per model
-    )
-    test_data_fake = PredictionRequest(
-        job_description="entry. data entry work customer service skill position home",
-        model_label="nb_bow"  # Will be overridden per model
-    )
+#     # Test data
+#     test_data_real = PredictionRequest(
+#         job_description="We are seeking an experienced data scientist for a salaried position at our corporate headquarters in Chicago.",
+#         model_label="nb_bow"  # Will be overridden per model
+#     )
+#     test_data_fake = PredictionRequest(
+#         job_description="entry. data entry work customer service skill position home",
+#         model_label="nb_bow"  # Will be overridden per model
+#     )
     
-    # Test each model
-    for model_label in MODEL_CONFIG.keys():
-        print(f"\n{'='*60}")
-        print(f"Testing Model: {model_label}")
-        print(f"{'='*60}")
+#     # Test each model
+#     for model_label in MODEL_CONFIG.keys():
+#         print(f"\n{'='*60}")
+#         print(f"Testing Model: {model_label}")
+#         print(f"{'='*60}")
         
-        try:
-            # Test with real job description
-            test_data_real.model_label = model_label
-            print("\n--- Testing Real Job Description ---")
-            real_result = predict_fraud(test_data_real)
-            print(f"  Prediction: {real_result['prediction_label']}")
-            print(f"  Confidence: {real_result['confidence_score']:.4f} ({real_result['confidence_score']*100:.2f}%)")
-            print(f"  Probabilities:")
-            print(f"    - Non-Fraudulent: {real_result['probabilities']['non_fraudulent']:.4f} ({real_result['probabilities']['non_fraudulent']*100:.2f}%)")
-            print(f"    - Fraudulent: {real_result['probabilities']['fraudulent']:.4f} ({real_result['probabilities']['fraudulent']*100:.2f}%)")
+#         try:
+#             # Test with real job description
+#             test_data_real.model_label = model_label
+#             print("\n--- Testing Real Job Description ---")
+#             real_result = predict_fraud(test_data_real)
+#             print(f"  Prediction: {real_result['prediction_label']}")
+#             print(f"  Confidence: {real_result['confidence_score']:.4f} ({real_result['confidence_score']*100:.2f}%)")
+#             print(f"  Probabilities:")
+#             print(f"    - Non-Fraudulent: {real_result['probabilities']['non_fraudulent']:.4f} ({real_result['probabilities']['non_fraudulent']*100:.2f}%)")
+#             print(f"    - Fraudulent: {real_result['probabilities']['fraudulent']:.4f} ({real_result['probabilities']['fraudulent']*100:.2f}%)")
             
-            # Test with fake job description
-            test_data_fake.model_label = model_label
-            print("\n--- Testing Fake Job Description ---")
-            fake_result = predict_fraud(test_data_fake)
-            print(f"  Prediction: {fake_result['prediction_label']}")
-            print(f"  Confidence: {fake_result['confidence_score']:.4f} ({fake_result['confidence_score']*100:.2f}%)")
-            print(f"  Probabilities:")
-            print(f"    - Non-Fraudulent: {fake_result['probabilities']['non_fraudulent']:.4f} ({fake_result['probabilities']['non_fraudulent']*100:.2f}%)")
-            print(f"    - Fraudulent: {fake_result['probabilities']['fraudulent']:.4f} ({fake_result['probabilities']['fraudulent']*100:.2f}%)")
+#             # Test with fake job description
+#             test_data_fake.model_label = model_label
+#             print("\n--- Testing Fake Job Description ---")
+#             fake_result = predict_fraud(test_data_fake)
+#             print(f"  Prediction: {fake_result['prediction_label']}")
+#             print(f"  Confidence: {fake_result['confidence_score']:.4f} ({fake_result['confidence_score']*100:.2f}%)")
+#             print(f"  Probabilities:")
+#             print(f"    - Non-Fraudulent: {fake_result['probabilities']['non_fraudulent']:.4f} ({fake_result['probabilities']['non_fraudulent']*100:.2f}%)")
+#             print(f"    - Fraudulent: {fake_result['probabilities']['fraudulent']:.4f} ({fake_result['probabilities']['fraudulent']*100:.2f}%)")
             
-        except Exception as e:
-            print(f"ERROR: Failed to test model '{model_label}': {str(e)}")
-            continue
+#         except Exception as e:
+#             print(f"ERROR: Failed to test model '{model_label}': {str(e)}")
+#             continue
     
-    print(f"\n{'='*60}")
-    print("--- End Local Test ---")
-    print(f"{'='*60}\n")
+#     print(f"\n{'='*60}")
+#     print("--- End Local Test ---")
+#     print(f"{'='*60}\n")
