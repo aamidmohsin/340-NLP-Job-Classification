@@ -3,7 +3,28 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pathlib import Path
 import joblib
-from typing import Optional, Dict, Tuple, Any
+import re
+from typing import Optional, Dict, Tuple, Any, List
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+
+# Download required NLTK data (if not already downloaded)
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
+
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords', quiet=True)
+
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet', quiet=True)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_ASSETS_DIR = BASE_DIR / 'model_assets'
@@ -11,6 +32,50 @@ MODEL_ASSETS_DIR = BASE_DIR / 'model_assets'
 # cache for loaded models and vectorizers
 model_cache: Dict[str, Any] = {}
 vectorizer_cache: Dict[str, Any] = {}
+
+# initialize text preprocessing components
+stop_words = set(stopwords.words('english'))
+lemmatizer = WordNetLemmatizer()
+
+def punctuation_remover(strings: List[str]) -> List[str]:
+    """Remove punctuation from a list of strings."""
+    cleaned_strings = []
+    for string in strings:
+        cleaned_string = re.sub(r'[^\w\s]', '', string)
+        cleaned_strings.append(cleaned_string)
+    return cleaned_strings
+
+def preprocess_text(text: str) -> str:
+    """
+    Preprocess text by:
+    1. Converting to lowercase
+    2. Removing punctuation
+    3. Removing extra whitespace
+    4. Tokenizing
+    5. Lemmatizing
+    6. Removing stop words
+    """
+    # Handle None or empty strings
+    if not text or not isinstance(text, str):
+        return ""
+    
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Remove punctuation
+    text = punctuation_remover([text])[0]
+    
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    # Tokenize
+    tokens = word_tokenize(text)
+    
+    # Lemmatize and remove stop words
+    tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in stop_words]
+    
+    # Join tokens back into a string
+    return ' '.join(tokens)
 
 # model configuration mapping
 MODEL_CONFIG = {
@@ -74,8 +139,11 @@ def predict_fraud(data: PredictionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading model: {str(e)}")
     
+    # preprocess and clean the input text
+    cleaned_text = preprocess_text(data.job_description)
+    
     # apply same feature extraction logic
-    text_input = [data.job_description]
+    text_input = [cleaned_text]
     text_features = vectorizer.transform(text_input)
 
     # get prediction
@@ -98,6 +166,7 @@ def predict_fraud(data: PredictionRequest):
             "fraudulent": float(probabilities[1])
         },
         "input_text_length": len(data.job_description),
+        "cleaned_text_length": len(cleaned_text),
         "model_used": data.model_label
     }
 
@@ -105,53 +174,54 @@ def predict_fraud(data: PredictionRequest):
 def health_check():
     return {"status": "ok", "message": "Job Fraud Classifier API is running."}
 
-
-# # local testing
-# if __name__ == '__main__':
-#     print("\n--- Running Local Test ---")
-#     print(f"Testing {len(MODEL_CONFIG)} models\n")
+"""
+# local testing
+if __name__ == '__main__':
+    print("\n--- Running Local Test ---")
+    print(f"Testing {len(MODEL_CONFIG)} models\n")
     
-#     # Test data
-#     test_data_real = PredictionRequest(
-#         job_description="We are seeking an experienced data scientist for a salaried position at our corporate headquarters in Chicago.",
-#         model_label="nb_bow"  # Will be overridden per model
-#     )
-#     test_data_fake = PredictionRequest(
-#         job_description="entry. data entry work customer service skill position home",
-#         model_label="nb_bow"  # Will be overridden per model
-#     )
+    # Test data
+    test_data_real = PredictionRequest(
+        job_description="We are seeking an experienced data scientist for a salaried position at our corporate headquarters in Chicago.",
+        model_label="nb_bow"  # Will be overridden per model
+    )
+    test_data_fake = PredictionRequest(
+        job_description="entry. data entry work customer service skill position home",
+        model_label="nb_bow"  # Will be overridden per model
+    )
     
-#     # Test each model
-#     for model_label in MODEL_CONFIG.keys():
-#         print(f"\n{'='*60}")
-#         print(f"Testing Model: {model_label}")
-#         print(f"{'='*60}")
+    # Test each model
+    for model_label in MODEL_CONFIG.keys():
+        print(f"\n{'='*60}")
+        print(f"Testing Model: {model_label}")
+        print(f"{'='*60}")
         
-#         try:
-#             # Test with real job description
-#             test_data_real.model_label = model_label
-#             print("\n--- Testing Real Job Description ---")
-#             real_result = predict_fraud(test_data_real)
-#             print(f"  Prediction: {real_result['prediction_label']}")
-#             print(f"  Confidence: {real_result['confidence_score']:.4f} ({real_result['confidence_score']*100:.2f}%)")
-#             print(f"  Probabilities:")
-#             print(f"    - Non-Fraudulent: {real_result['probabilities']['non_fraudulent']:.4f} ({real_result['probabilities']['non_fraudulent']*100:.2f}%)")
-#             print(f"    - Fraudulent: {real_result['probabilities']['fraudulent']:.4f} ({real_result['probabilities']['fraudulent']*100:.2f}%)")
+        try:
+            # Test with real job description
+            test_data_real.model_label = model_label
+            print("\n--- Testing Real Job Description ---")
+            real_result = predict_fraud(test_data_real)
+            print(f"  Prediction: {real_result['prediction_label']}")
+            print(f"  Confidence: {real_result['confidence_score']:.4f} ({real_result['confidence_score']*100:.2f}%)")
+            print(f"  Probabilities:")
+            print(f"    - Non-Fraudulent: {real_result['probabilities']['non_fraudulent']:.4f} ({real_result['probabilities']['non_fraudulent']*100:.2f}%)")
+            print(f"    - Fraudulent: {real_result['probabilities']['fraudulent']:.4f} ({real_result['probabilities']['fraudulent']*100:.2f}%)")
             
-#             # Test with fake job description
-#             test_data_fake.model_label = model_label
-#             print("\n--- Testing Fake Job Description ---")
-#             fake_result = predict_fraud(test_data_fake)
-#             print(f"  Prediction: {fake_result['prediction_label']}")
-#             print(f"  Confidence: {fake_result['confidence_score']:.4f} ({fake_result['confidence_score']*100:.2f}%)")
-#             print(f"  Probabilities:")
-#             print(f"    - Non-Fraudulent: {fake_result['probabilities']['non_fraudulent']:.4f} ({fake_result['probabilities']['non_fraudulent']*100:.2f}%)")
-#             print(f"    - Fraudulent: {fake_result['probabilities']['fraudulent']:.4f} ({fake_result['probabilities']['fraudulent']*100:.2f}%)")
+            # Test with fake job description
+            test_data_fake.model_label = model_label
+            print("\n--- Testing Fake Job Description ---")
+            fake_result = predict_fraud(test_data_fake)
+            print(f"  Prediction: {fake_result['prediction_label']}")
+            print(f"  Confidence: {fake_result['confidence_score']:.4f} ({fake_result['confidence_score']*100:.2f}%)")
+            print(f"  Probabilities:")
+            print(f"    - Non-Fraudulent: {fake_result['probabilities']['non_fraudulent']:.4f} ({fake_result['probabilities']['non_fraudulent']*100:.2f}%)")
+            print(f"    - Fraudulent: {fake_result['probabilities']['fraudulent']:.4f} ({fake_result['probabilities']['fraudulent']*100:.2f}%)")
             
-#         except Exception as e:
-#             print(f"ERROR: Failed to test model '{model_label}': {str(e)}")
-#             continue
+        except Exception as e:
+            print(f"ERROR: Failed to test model '{model_label}': {str(e)}")
+            continue
     
-#     print(f"\n{'='*60}")
-#     print("--- End Local Test ---")
-#     print(f"{'='*60}\n")
+    print(f"\n{'='*60}")
+    print("--- End Local Test ---")
+    print(f"{'='*60}\n")
+"""

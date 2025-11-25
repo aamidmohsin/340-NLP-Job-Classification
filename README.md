@@ -28,7 +28,7 @@ This project was developed in collaboration with Christian Kevin Sidharta & Marv
   │   └── Job_Classification_Final_Training.ipynb
   ├── README.md
   ├── report/
-  │   └── Job_Classification_Report.pdf
+      └── Job_Classification_Report.pdf
 ```
 
 ## API Usage
