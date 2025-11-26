@@ -16,6 +16,15 @@ try:
 except LookupError:
     nltk.download('punkt', quiet=True)
 
+# punkt_tab is required for newer NLTK versions
+try:
+    nltk.data.find('tokenizers/punkt_tab')
+except LookupError:
+    try:
+        nltk.download('punkt_tab', quiet=True)
+    except Exception:
+        pass  # punkt_tab may not be available in all NLTK versions
+
 try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
@@ -25,6 +34,15 @@ try:
     nltk.data.find('corpora/wordnet')
 except LookupError:
     nltk.download('wordnet', quiet=True)
+
+# omw-1.4 is often needed with wordnet for better compatibility
+try:
+    nltk.data.find('corpora/omw-1.4')
+except LookupError:
+    try:
+        nltk.download('omw-1.4', quiet=True)
+    except Exception:
+        pass  # omw-1.4 may not be available in all NLTK versions
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_ASSETS_DIR = BASE_DIR / 'model_assets'
