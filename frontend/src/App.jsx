@@ -35,6 +35,17 @@ function App() {
       return;
     }
 
+    // Client-side validation: check word count before sending request
+    const wordCount = jobDescription.trim().split(/\s+/).filter(word => word.length > 0).length;
+    if (wordCount < 10) {
+      setResult({
+        insufficient_data: true,
+        message: 'Not enough information provided to determine whether posting is legitimate or fraudulent'
+      });
+      setError(null);
+      return;
+    }
+
     if (!API_URL) {
       setError('API URL is not configured. Please create a .env file with REACT_APP_API_URL set.');
       return;
@@ -57,12 +68,30 @@ function App() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to get prediction');
+        let errorMessage = 'Failed to get prediction';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch (parseError) {
+          // If JSON parsing fails, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        
+        // Check if error is due to insufficient data
+        if (errorMessage.toLowerCase().includes('data input not long enough') || 
+            errorMessage.toLowerCase().includes('not long enough')) {
+          // Set as special result instead of error
+          setResult({
+            insufficient_data: true,
+            message: 'not enough information to determine whether posting is legitimate or fraudulent'
+          });
+        } else {
+          throw new Error(errorMessage);
+        }
+      } else {
+        const data = await response.json();
+        setResult(data);
       }
-
-      const data = await response.json();
-      setResult(data);
     } catch (err) {
       setError(err.message || 'An error occurred while processing your request');
     } finally {
@@ -122,7 +151,7 @@ function App() {
             >
               {loading ? 'Analyzing...' : 'Analyze Job Posting'}
             </button>
-            {result && (
+            {(result || error) && (
               <button
                 type="button"
                 onClick={handleReset}
@@ -143,54 +172,33 @@ function App() {
         {result && (
           <div className="result-container">
             <h2>Prediction Results</h2>
-            <div className={`prediction-badge ${result.prediction_code === 1 ? 'fraudulent' : 'legitimate'}`}>
-              <span className="prediction-label">{result.prediction_label}</span>
-              <span className="confidence-score">
-                {(result.confidence_score * 100).toFixed(2)}% confidence
-              </span>
-            </div>
+            
+            {result.insufficient_data ? (
+              <div className="insufficient-data-message">
+                <p>{result.message}</p>
+              </div>
+            ) : (
+              <>
+                <div className={`prediction-badge ${result.prediction_code === 1 ? 'fraudulent' : 'legitimate'}`}>
+                  <span className="prediction-label">{result.prediction_label}</span>
+                  <span className="confidence-score">
+                    {(result.confidence_score * 100).toFixed(2)}% confidence
+                  </span>
+                </div>
 
-            <div className="probabilities">
-              <h3>Probability Breakdown</h3>
-              <div className="probability-bars">
-                <div className="probability-item">
-                  <div className="probability-label">
-                    <span>Non-Fraudulent (Real)</span>
-                    <span>{(result.probabilities.non_fraudulent * 100).toFixed(2)}%</span>
+                <div className="metadata">
+                  <div className="metadata-item">
+                    <strong>Model Used:</strong> {result.model_used}
                   </div>
-                  <div className="probability-bar">
-                    <div
-                      className="probability-fill legitimate"
-                      style={{ width: `${result.probabilities.non_fraudulent * 100}%` }}
-                    />
+                  <div className="metadata-item">
+                    <strong>Input Text Length:</strong> {result.input_text_length} characters
+                  </div>
+                  <div className="metadata-item">
+                    <strong>Cleaned Text Length:</strong> {result.cleaned_text_length} characters
                   </div>
                 </div>
-                <div className="probability-item">
-                  <div className="probability-label">
-                    <span>Fraudulent (Fake)</span>
-                    <span>{(result.probabilities.fraudulent * 100).toFixed(2)}%</span>
-                  </div>
-                  <div className="probability-bar">
-                    <div
-                      className="probability-fill fraudulent"
-                      style={{ width: `${result.probabilities.fraudulent * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="metadata">
-              <div className="metadata-item">
-                <strong>Model Used:</strong> {result.model_used}
-              </div>
-              <div className="metadata-item">
-                <strong>Input Text Length:</strong> {result.input_text_length} characters
-              </div>
-              <div className="metadata-item">
-                <strong>Cleaned Text Length:</strong> {result.cleaned_text_length} characters
-              </div>
-            </div>
+              </>
+            )}
           </div>
         )}
       </div>

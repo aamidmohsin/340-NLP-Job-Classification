@@ -172,6 +172,14 @@ def predict_fraud(data: PredictionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading model: {str(e)}")
     
+    # validate that input text has enough words for meaningful prediction
+    word_count = len([word for word in data.job_description.split() if word.strip()])
+    if word_count < 10:
+        raise HTTPException(
+            status_code=400, 
+            detail="data input not long enough"
+        )
+    
     # preprocess and clean the input text
     cleaned_text = preprocess_text(data.job_description)
     
