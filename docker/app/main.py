@@ -1,9 +1,11 @@
 # app/main.py
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pathlib import Path
 import joblib
 import re
+import os
 from typing import Optional, Dict, Tuple, Any, List
 import nltk
 from nltk.corpus import stopwords
@@ -139,6 +141,19 @@ def load_model_and_vectorizer(model_label: str) -> Tuple[Any, Any]:
 
 # initialize FastAPI and define input schema
 app = FastAPI(title="Job Fraud Classifier API")
+
+# Configure CORS to allow requests from frontend
+# Get allowed origins from environment variable or use defaults for development
+allowed_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",")]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,  # Can be configured via CORS_ORIGINS env var
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 class PredictionRequest(BaseModel):
     job_description: str
