@@ -12,6 +12,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 
+FRONTEND_URL = os.getenv("FRONTEND_ENDPOINT")
 # Download required NLTK data (if not already downloaded)
 try:
     nltk.data.find('tokenizers/punkt')
@@ -143,16 +144,22 @@ def load_model_and_vectorizer(model_label: str) -> Tuple[Any, Any]:
 app = FastAPI(title="Job Fraud Classifier API")
 
 # Configure CORS to allow requests from frontend
-# Get allowed origins from environment variable or use defaults for development
-allowed_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
-allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",")]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,  # Can be configured via CORS_ORIGINS env var
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=allowed_origins,  # Can be configured via CORS_ORIGINS env var
+#     allow_credentials=True,
+#     allow_methods=["*"],  # Allows all methods
+#     allow_headers=["*"],  # Allows all headers
+# )
+origins = [
+    FRONTEND_URL,
+    "http://localhost:3000"
+]
+app.add_middleware(CORSMiddleware,
+                   allow_origins=origins,
+                   allow_credentials=True,
+                   allow_methods=["*"],
+                   allow_headers=["*"]
 )
 
 class PredictionRequest(BaseModel):

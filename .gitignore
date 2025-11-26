@@ -5,3 +5,4 @@ debug_commands.txt
 docker/.env
 
 frontend/.env
+frontend/build

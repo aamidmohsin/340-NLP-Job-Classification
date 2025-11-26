@@ -22,12 +22,16 @@ This report was developed in collaboration with Christian Kevin Sidharta & Marvi
   │   │   ├── *.joblib (trained models and vectorizers)
   │   ├── Dockerfile
   │   └── requirements.txt
+  ├── frontend/
+  │   ├── public/
+  │   ├── src/
+  │   └── ...
   ├── LICENSE
   ├── notebooks/
   │   ├── Job_Classification_EDA+Modelling.ipynb
   │   └── Job_Classification_Final_Training.ipynb
   ├── README.md
-  ├── report/
+  └── report/
       └── Job_Classification_Report.pdf
 ```
 
