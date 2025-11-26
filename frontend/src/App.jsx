@@ -201,6 +201,26 @@ function App() {
             )}
           </div>
         )}
+
+        <div className="research-description">
+          <h3>About This Research</h3>
+          <p>
+            Job scams pose a significant threat to job seekers, leading to financial loss and identity theft. This research aims to develop a machine learning model to detect fraudulent job postings using the Employment Scam Aegean Dataset (EMSCAD), which contains 17,880 real-life job ads. We investigate the effectiveness of natural language processing (NLP) techniques and machine learning algorithms in distinguishing between legitimate and fraudulent job listings. By leveraging text-processing methods such as tokenization, feature extraction, and sentiment analysis, combined with classification models, we seek to identify linguistic markers and patterns indicative of scam job postings. The study provides insights into the key characteristics of fraudulent listings and evaluates the model's performance in detecting scams, contributing to the development of automated screening tools for online job platforms.
+          </p>
+        </div>
+
+        <div className="report-section">
+          <p>
+            <a 
+              href="https://github.com/aamidmohsin/340-NLP-Job-Classification/blob/frontend/report/Job_Classification_Report.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="report-link"
+            >
+              Read our findings here
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );

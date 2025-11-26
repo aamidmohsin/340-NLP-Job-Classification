@@ -4,7 +4,7 @@ Job scams pose a significant threat to job seekers, leading to financial loss an
 
 The full project report can be found in `report/Job_Classification_Report.pdf`
 
-This project was developed in collaboration with Christian Kevin Sidharta & Marvin Roopchan.
+This report was developed in collaboration with Christian Kevin Sidharta & Marvin Roopchan.
 
 ## Project Directory Structure
 
